@@ -41,11 +41,17 @@ export function listRows(key: string): EntryRow[] {
 }
 
 export function saveRows(key: string, rows: EntryRow[]): void {
-  const next = { ...allRows(), [key]: rows }
-  cache = next
+  commitAll({ [key]: rows })
+}
+
+// 多表原子提交：先落库、成功后才换缓存。任何一步失败都抛错，
+// 内存缓存和 localStorage 都保持提交前的状态，调用方看到的就是整组回退。
+export function commitAll(changes: Record<string, EntryRow[]>): void {
+  const next = { ...allRows(), ...changes }
   if (typeof window !== 'undefined' && window.localStorage) {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
   }
+  cache = next
 }
 
 export function resetRows(key: string): EntryRow[] {

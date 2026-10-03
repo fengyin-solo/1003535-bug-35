@@ -43,6 +43,10 @@ export function runAction(key: string, id: number, action: string): ActionResult
   if (current === target) {
     return { ok: false, message: `${meta.entity}已经是「${target}」，不用重复操作` }
   }
+  const sources = meta.actionSources?.[action]
+  if (sources && !sources.includes(current)) {
+    return { ok: false, message: `${meta.entity}当前状态为「${current}」，不能执行「${action}」` }
+  }
   const lastStatus = meta.statuses[meta.statuses.length - 1]
   const updated: EntryRow = {
     ...rows[index],
@@ -52,7 +56,14 @@ export function runAction(key: string, id: number, action: string): ActionResult
   }
   const next = [...rows]
   next[index] = updated
-  saveRows(key, next)
+  try {
+    saveRows(key, next)
+  } catch (error) {
+    return {
+      ok: false,
+      message: `${meta.entity}状态保存失败，未做任何改动：${error instanceof Error ? error.message : '未知错误'}`,
+    }
+  }
   return { ok: true, message: `${meta.entity}已${action}，当前状态「${target}」` }
 }
 

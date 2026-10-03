@@ -17,6 +17,8 @@ export type ModuleMeta = {
   statuses: string[]
   actions: string[]
   actionTargets: Record<string, string>
+  /** 可选：每个动作允许的前置状态。登记后 runAction 会校验来源状态，不在列表里的一律拒绝。 */
+  actionSources?: Record<string, string[]>
   metrics: string[]
 }
 
